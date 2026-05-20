@@ -2,19 +2,26 @@ const mongoose = require('mongoose');
 
 async function ConnectDB() {
     try {
-        // Use standard connection string instead of SRV
-        const mongoURI = "mongodb://rishitiwaribca756_db_user:2Zx0DnwtaC9oRnnJ@cluster0.2xeyjdx.mongodb.net:27017/New-project?ssl=true&replicaSet=atlas-u6hepv-shard-0&authSource=admin&retryWrites=true&w=majority";
+        const mongoURI = process.env.MONGODB_URI || "mongodb+srv://rishitiwaribca756_db_user:2Zx0DnwtaC9oRnnJ@cluster0.2xeyjdx.mongodb.net/New-project";
         
-        await mongoose.connect(mongoURI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 5000,
-        });
+        // Super simple - Mongoose 9 handles everything automatically
+        await mongoose.connect(mongoURI);
         
         console.log("✅ Database connected successfully");
+        
+        // Monitor connection
+        mongoose.connection.on('error', (err) => {
+            console.error('MongoDB error:', err);
+        });
+        
+        mongoose.connection.on('disconnected', () => {
+            console.log('MongoDB disconnected, attempting to reconnect...');
+        });
+        
     } catch (error) {
         console.error("❌ Database connection failed:", error.message);
-        setTimeout(ConnectDB, 5000);
+        // Don't crash the server, just log error
+        // The server will still run but DB operations will fail
     }
 }
 
